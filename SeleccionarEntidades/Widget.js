@@ -2,10 +2,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'esri/symbols/SimpleFillSymbol'
   return declare([BaseWidget], {
     baseClass: 'add-graphic',    
     
-    onOpen: function onOpen() {
-      this.map.graphics.show();
+    onOpen: function() {      
 
-      this.symbol = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASHDOT, new Color([255, 255, 0]), 2), new Color([255, 255, 0, 0.2]));    
+      // var symbol = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASHDOT, new Color([255, 255, 0]), 2), new Color([255, 255, 0, 0.2]));    
 
       console.log("Parte1");
 
@@ -13,56 +12,42 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'esri/symbols/SimpleFillSymbol'
 
       var outFieldsUrban = ["ID", "Estado"];
 
-            // Construct the Quakes layer
+            
             var lyrUrban = new FeatureLayer(featurelayer, {
-                /*
-                 * Step: Set the quakes layer output fields
-                 */
+                
                 outFields: outFieldsUrban
 
             });            
-            this.map.addLayers([lyrUrban]);
+            this.map.addLayers([lyrUrban]);              
 
-      var gridUrbanismo = new (declare([Grid, Selection]))({
-          bufferRows: Infinity,
-          columns: {
-              objeto: "ID",              
-              estado: "Estado"              
-          }
-      }, "divGrid"); 
+      // this.map.graphics.show();
       
-      lyrUrban.on("load", initDrawTool);
+      // this.map.on('click', lang.hitch(this, function (evt) {
+      //   if (dom.byId('activado').checked) {
 
-      function initDrawTool() {
-        console.log("dibujar")
-          
-          var tbDraw = new Draw(this.map);
-          tbDraw.on("draw-end");
-          tbDraw.activate(Draw.POLYGON);
+      //     console.log("EVT", evt)
 
-          console.log("dibujar2")
-      };
-      
-      this.map.on('click', lang.hitch(this, function (evt) {
-        if (dom.byId('activado').checked) {
+      //     this.map.graphics.clear();
 
-          console.log("EVT", evt)
+      //     var geometryInput = evt.mapPoint;
 
-          this.map.graphics.clear();
+      //     var graphic = new Graphic(geometryInput, symbol);
 
-          var geometryInput = evt.geometry;
+      //     this.map.graphics.add(graphic);
 
-          var graphic = new Graphic(geometryInput, this.symbol);
+      //     selectPoint(geometryInput)
+      //   };
+      // }));
+      var tbDraw = new Draw(this.map);
 
-          this.map.graphics.add(graphic);
+                tbDraw.on("draw-complete", selectPoint);
 
-          selectPoint(geometryInput)
-        };
-      }));
+                tbDraw.activate(Draw.POLYGON);
 
       function selectPoint(geometryInput) {
 
-          // Define symbol for selected features (using JSON syntax for improved readability!)
+        console.log("Geometry", geometryInput)
+          
           var symbolSelected = new SimpleMarkerSymbol({
               "type": "esriSMS",
               "style": "esriSMSCircle",
@@ -76,22 +61,30 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'esri/symbols/SimpleFillSymbol'
           
           lyrUrban.setSelectionSymbol(symbolSelected);
           
+          
           var queryUrban = new Query();
-                queryUrban.geometry = geometryInput;
 
-                /*
-                 * Step: Wire the layer's selection complete event
-                 */
+                queryUrban.geometry = geometryInput.geometry;
+
+                
                 lyrUrban.on("selection-complete", populateGrid);
 
-                /*
-                 * Step: Perform the selection
-                 */
+                
                 lyrUrban.selectFeatures(queryUrban, FeatureLayer.SELECTION_NEW);
 
           };
 
       function populateGrid(results) {
+
+        console.log(results)
+
+        var gridUrbanismo = new (declare([Grid, Selection]))({
+          bufferRows: Infinity,
+          columns: {
+              objeto: "ID",              
+              estado: "Estado"              
+          }
+      }, "divGrid");
          
           
           var dataUrbanismo = array.map(results.features, function (feature) {
@@ -114,10 +107,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'esri/symbols/SimpleFillSymbol'
 
           console.log("Hola")
       };
-    },
-
-    onClose: function onClose() {
-      this.map.graphics.hide();
     }
+
+    
   });
 });
